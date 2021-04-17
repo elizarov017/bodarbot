@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/cloudy-proj/bodarbot#readme",
   "dependencies": {
-    "telebot": "^1.4.1"
+    "telebot": "^1.4.1",
+    "express": "^4.17.1",
+    "mongodb": "^3.6.6"
   }
 }
