@@ -9,7 +9,7 @@ const bot = new TeleBot("1761355313:AAG-bKTHdZOwe5Vj54xTLbMdy5BWrcUYNg4");
 // const myModule = require('./m');
 // let val = myModule.ass1; // val is "Hello"   
 
-var getUserByID = (id) => { return users[id]; };
+var getUserByID = (id) => { return users[id]; }; s
 
 // [${msg.from.first_name}](tg://user?id=${msg.from.id})
 
