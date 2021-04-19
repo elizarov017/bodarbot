@@ -1,24 +1,38 @@
-
+// bot.on('message', (msg) => {
+//   const chatId = msg.chat.id;
+//   var user_profile = bot.getUserProfilePhotos(msg.from.id);
+//   user_profile.then(function (res) {
+      
+//   });
+// });
 // EXPORTS
+
+const db = require("./test");
+db.start();
+// let a = db.findOneByID("251196883");
+
+// a.then(function (result) {
+//   console.log("Promise: ")
+//   console.log(result);
+// })
 
 const { addMethods } = require('telebot');
 const TeleBot = require('telebot');
+
+// getUserByID(id), updateData(user), findAllMatched(user)
 
 const bot = new TeleBot("1761355313:AAG-bKTHdZOwe5Vj54xTLbMdy5BWrcUYNg4");
 
 // const myModule = require('./m');
 // let val = myModule.ass1; // val is "Hello"   
 
-var getUserByID = (id) => {
-  let i = users.findIndex((element, j) => {
-    return users[j]["id"] == id
-  });
-   return  users[i];
-}
-var updateDb = (user) => { 
-  users.push(user);
-  console.log(users);
-};
+// var getUserByID = (id) => {
+//   let i = users.findIndex((element, j) => {
+//     return users[j]["id"] == id
+//   });
+//    return  users[i];
+// }
+
 
 // [${msg.from.first_name}](tg://user?id=${msg.from.id})
 
@@ -33,32 +47,86 @@ var updateDb = (user) => {
 // }
 // `
 
+let started = {
+
+};
 
 // TEXT
 
 const mainMenuText = "ГОЛОВНЕ МЕНЮ\n1. Розпочати пошук🔎\n2. Моя анкета📝";
 
+bot.on("*", (msg) => {
+  if (started[`${msg.from.id}`] == undefined && (msg.text.charAt(0) != "/" )) {
+    started[`${msg.from.id}`] = "";
+    console.log("a");
+    setTimeout(() => {
+      mainMenu(msg);
+    }, 500);
+    
+  }
+  else {}
+});
+
+bot.on("/start", (msg) => {
+  console.log("bb");
+  if (started[`${msg.from.id}`] == undefined) {
+    started[`${msg.from.id}`] = "";
+    
+    bot.sendMessage(msg.from.id, `Привіт, ${msg.from.first_name}!\nЯ BodArBot і я допоможу тобі знайти другу половинку! Натискай кнопку і погнали!`, {
+      replyMarkup: {
+      keyboard: [
+       [
+         {
+           text: 'Зареєструватись!', // текст на кнопке
+         }
+       ]
+     ],
+     resize_keyboard: true,
+     one_time_keyboard: true
+      }   
+    });
+  }
+  else {
+    setTimeout(() => {
+      mainMenu(msg);
+    }, 1000);
+  }
+     
+}); 
+
+
+
 //  KEYBOARDS
 
 let inSearch = (msgOld) => {
-   
-}
-
-let myProfile = (msgOld) => {
-
-  let inMyProfile = true;
-  let user = getUserByID(msgOld.from.id);
-  // console.log(user);  
-  bot.sendPhoto(user["id"], user.photo, {
-    caption: `Ім'я: [${user["name"]}](tg://user?id=${user["id"]})\n\nВік: ${user["age"]} \n\nОпис: ${user["description"]}\n\nСтать: ${user["gender"] == "male"? "чоловіча":"жіноча"}\n\nШукаю: ${user["looking_for"] == "male"? "хлопця" :  user["looking_for"] == "both"? "без різниці" : "дівчину"}`
-    ,
-    parseMode: "Markdown"
-    ,
+  bot.sendMessage(msgOld.from.id, `не тикай поки сюди`, {
     replyMarkup: {
       keyboard: [ ["Перейти в головне меню"] ],
       resize_keyboard: true,
       one_time_keyboard: true
     } 
+  });
+  // setTimeout(() => {
+    
+  // }, 500);
+};
+
+let myProfile = (msgOld) => {
+  let inMyProfile = true;
+  let userId = msgOld.from.id;
+  let userPromise = db.getUserByID("" + userId);
+  
+  userPromise.then((res) => { 
+    user = res;
+    bot.sendPhoto(userId, "" + user.photo, {
+      caption: `Ім'я: [${user["name"]}](tg://user?id=${userId})\n\nВік: ${user["age"]} \n\nОпис: ${user["description"]}\n\nСтать: ${user["gender"] == "male"? "чоловіча":"жіноча"}\n\nШукаю: ${user["looking_for"] == "male"? "хлопця" :  user["looking_for"] == "both"? "без різниці" : "дівчину"}`,
+      parseMode: "Markdown",
+      replyMarkup: {
+        keyboard: [ ["Перейти в головне меню", "Редагувати анкету"] ],
+        resize_keyboard: true,
+        one_time_keyboard: true
+      } 
+    });
   });
 }
               
@@ -85,8 +153,9 @@ let mainMenu = (msgOld) => {
         myProfile(msg);
       }
       else {
-        bot.sendMessage(msg.from.id, "Вибери, будь ласка, один із варіантів.");
-        setTimeout(() => {
+        if (msg.text.charAt(0) != "/") {
+          bot.sendMessage(msg.from.id, "Вибери, будь ласка, один із варіантів.");
+          setTimeout(() => {
           bot.sendMessage(msg.from.id, mainMenuText, {
             replyMarkup: {
               keyboard: [ ["1", "2"] ],
@@ -94,52 +163,56 @@ let mainMenu = (msgOld) => {
               one_time_keyboard: true
             }
           });
-        }, 500);
+          }, 500);
+        } else inMenu = false;
       }
+        
     }
   })
 };
 
-bot.on("/start", (msg) => {
-     
-     bot.sendMessage(msg.from.id, `Привіт, ${msg.from.first_name}!\nЯ BodArBot і я допоможу тобі знайти другу половинку! Натискай кнопку і погнали!`, {
-         replyMarkup: {
-         keyboard: [
-          [
-            {
-              text: 'Зареєструватись!', // текст на кнопке
-            }
-          ]
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: true
-         }   
-     });
-}); 
+bot.on([/Перейти в головне меню/], (msg) => {
+  mainMenu(msg);
+});
 
-bot.on(/Зареєструватись!/, (msg) => {
-  
-  // bot.sendMessage(msg.from.id, `Чудово! Давай розпочнемо реєстрацію. Твоє ім'я?`);
-  if (msg.from.username == undefined) {
-    bot.sendMessage(msg.from.id, "Вибач, але щоб зареєструватись в тебе має бути псевдонім, але його немає 😔\n[Ось інструкція як його створити](https://youtu.be/RtxySv4ANDU?t=23)", {
-      parseMode: "Markdown",
-      replyMarkup: {
-        keyboard: [
-          ["Все, псевдонім створив!"]
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: true
+bot.on(/Зареєструватись!/, (msg)=> {
+  let userId = msg.from.id;
+  const newUser = db.getUserByID("" + userId);
+  newUser.then((res) => {
+    console.log(res);
+    if (res == null) {
+      if (msg.from.username == undefined) {
+        bot.sendMessage(userId, "Вибач, але щоб зареєструватись в тебе має бути псевдонім, але його немає 😔\n[Ось інструкція як його створити](https://youtu.be/RtxySv4ANDU?t=23)", {
+          parseMode: "Markdown",
+          replyMarkup: {
+            keyboard: [
+              ["Все, псевдонім створив!"]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+          }
+        });
       }
-    })
-  }
-  else {
-    registration(msg);
-  }
+      else {
+        registration(msg);
+      }
+    }
+    else {
+      bot.sendMessage(userId, "Ой! Схоже ти вже зареєстрований, ось твоя анкета:");
+      setTimeout(() => {
+        myProfile(msg);
+      }, 500);
+    }
+  });
+  
+  
+  
 });
 
 bot.on([/Все, псевдонім створив!/, /Все, тепер точно!/], (msg) => {
+  let userId = msg.from.id;
   if (msg.from.username == undefined) {
-    bot.sendMessage(msg.from.id, "Його все ще немає...", {
+    bot.sendMessage(userId, "Його все ще немає...", {
       parseMode: "Markdown",
       replyMarkup: {
         keyboard: [
@@ -158,7 +231,7 @@ bot.on([/Все, псевдонім створив!/, /Все, тепер точ
 
 let registration = (msgOld) => {
 
-  let step = 0;
+  let step = 1;
   let userId = msgOld.from.id;
   let user = {
     "id": "" + msgOld.from.id,
@@ -174,33 +247,45 @@ let registration = (msgOld) => {
     "history": {    }
   }
 
+  bot.sendMessage(userId, `Чудово! Давай розпочнемо реєстрацію. Твоє ім'я?`, {
+    replyMarkup: {
+      keyboard: [
+        [
+        { text: msgOld.from.first_name }
+        ]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  });
+
   bot.on("*", (msg) => {
-    if (msg.from.id == userId && step < 8) {
+    if (msg.from.id == userId && step < 8 && msg.text != /\/*/) {
       if (msg.text != undefined || step == 4 || step == 3) {
 
         switch (step){
-          case 0:
-            bot.sendMessage(userId, `Чудово! Давай розпочнемо реєстрацію. Твоє ім'я?`, {
-              replyMarkup: {
-                keyboard: [
-                  [
-                  { text: msg.from.first_name }
-                  ]
-                ],
-                resize_keyboard: true,
-                one_time_keyboard: true
-              }
-            });
-            step++;
-            break;
+          // case 0:
+          //   bot.sendMessage(msg.from.id, `Чудово! Давай розпочнемо реєстрацію. Твоє ім'я?`, {
+          //     replyMarkup: {
+          //       keyboard: [
+          //         [
+          //         { text: msg.from.first_name }
+          //         ]
+          //       ],
+          //       resize_keyboard: true,
+          //       one_time_keyboard: true
+          //     }
+          //   });
+          //   step++;
+          //   break;
           case 1:
             user["name"] = msg.text;
-            step++;
             bot.sendMessage(msg.from.id, `Ага, далі. Твій вік?`, {
               replyMarkup: {
                 remove_keyboard: true
               }
             });
+            step++;
             break;
           case 2:
             if (parseInt(msg.text) < 1 || parseInt(msg.text) > 120 || parseInt(msg.text) == NaN) {
@@ -219,7 +304,6 @@ let registration = (msgOld) => {
                   one_time_keyboard: true
                 }
               });
-              
               step++;
             }
             break;
@@ -274,20 +358,30 @@ let registration = (msgOld) => {
             }
             else if (msg["text"] == "Використати фото з аватарки") {
               var user_profile = bot.getUserProfilePhotos(msg.from.id);
-              // console.log(user_profile);
-              step++;
               user_profile.then(function (res) {
-                var file_id = res.photos[0][0].file_id;
-                user["photo"] = file_id;
-                bot.sendMessage(msg.from.id, "Тепер вкажи свою стать", {
-                  replyMarkup: {
-                    keyboard:  [
-                      ["Я чоловік","Я дівчина"]
-                    ],
-                    resize_keyboard: true,
-                    one_time_keyboard: true
-                  }
-                });
+                if (res["total_count"] == 0) {
+                  bot.sendMessage(msg.from.id, `Ой, схоже аватарки в тебе немає... Відправ мені, будь ласка, своє фото`, {
+                    replyMarkup: {
+                      remove_keyboard: true
+                    }
+                  });
+                }
+                else {
+                  var file_id = res.photos[0][0].file_id;
+                  user["photo"] = file_id;
+                  bot.sendMessage(msg.from.id, "Тепер вкажи свою стать", {
+                    replyMarkup: {
+                      keyboard:  [
+                        ["Я чоловік","Я дівчина"]
+                      ],
+                      resize_keyboard: true,
+                      one_time_keyboard: true
+                    }
+                  });
+                  
+                  step++;
+                }
+               
               });
             }
             else {
@@ -336,7 +430,7 @@ let registration = (msgOld) => {
               else if (msg.text == "Без різниці") user["looking_for"] = "both";
               bot.sendMessage(msg.from.id, "Все, реєстрацію закінчено. Тепер можеш перейти в головне меню. Доречі, ось твоя анкета:");
               setTimeout(() => {
-                console.log(user.photo);
+                // console.log(user.photo);
                 bot.sendPhoto(msg.from.id, user.photo, {
                   caption: `[${user.name}](tg://user?id=${msg.from.id})  -  ${user.age} \n\n${user.description}`,
                   parseMode: "Markdown",
@@ -347,7 +441,7 @@ let registration = (msgOld) => {
                   }
                 });
               }, 1000);
-              updateDb(user);
+              db.updateData(user);
               step++;
             }
             else {
@@ -364,10 +458,10 @@ let registration = (msgOld) => {
               });
             }
             break;
-          case 7:
-            mainMenu(msg);
-            step++;
-            break;
+          // case 7:
+          //   mainMenu(msg);
+          //   step++;
+          //   break;
         }
       }
       else {
